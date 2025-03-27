@@ -1,0 +1,154 @@
+description: TypeScript code style guide for this project
+
+---
+globs: ["**/*.ts", "**/*.tsx"]
+
+---
+
+rule:
+
+## Use arrow functions for consistency and readability
+
+**Bad:**
+```ts
+function greet(name: string): string {
+  return `Hello, ${name}`;
+}
+```
+
+**Good:**
+```ts
+const greet = (name: string): string => {
+  return `Hello, ${name}`;
+};
+```
+
+---
+
+## Prefer `type` over `interface` for object definitions
+
+Use `type` for simple object shapes and utility types. Use `interface` only when extending or implementing classes.
+
+**Bad:**
+```ts
+interface User {
+  id: number;
+  name: string;
+}
+```
+
+**Good:**
+```ts
+type User = {
+  id: number;
+  name: string;
+};
+```
+
+**Good (with inheritance):**
+```ts
+interface Admin extends User {
+  role: string;
+}
+```
+
+---
+
+## Avoid using `any`
+
+**Bad:**
+```ts
+const data: any = fetchData();
+```
+
+**Good:**
+```ts
+const data: unknown = fetchData();
+```
+
+---
+
+## Explicitly declare return types for exported functions
+
+**Bad:**
+```ts
+export const getUser = (id: number) => fetch(`/users/${id}`);
+```
+
+**Good:**
+```ts
+export const getUser = (id: number): Promise<Response> => {
+  return fetch(`/users/${id}`);
+};
+```
+
+---
+
+## Use optional chaining and nullish coalescing
+
+**Bad:**
+```ts
+const name = user && user.profile && user.profile.name || "Guest";
+```
+
+**Good:**
+```ts
+const name = user?.profile?.name ?? "Guest";
+```
+
+---
+
+## Prefer `const` over `let`, never use `var`
+
+**Bad:**
+```ts
+var count = 1;
+let name = "John";
+```
+
+**Good:**
+```ts
+const count = 1;
+const name = "John";
+```
+
+---
+
+## Avoid non-null assertions
+
+Non-null assertions (`!`) can lead to runtime errors. Use proper null checks instead.
+
+**Bad:**
+```ts
+const length = input!.length;
+```
+
+**Good:**
+```ts
+if (input != null) {
+  const length = input.length;
+}
+```
+
+---
+
+## Prefer async/await over promise chaining
+
+**Bad:**
+```ts
+fetchData()
+  .then((res) => res.json())
+  .then((data) => {
+    console.log(data);
+  });
+```
+
+**Good:**
+```ts
+const getData = async () => {
+  const res = await fetchData();
+  const data = await res.json();
+  console.log(data);
+};
+```
+

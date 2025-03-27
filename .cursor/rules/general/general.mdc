@@ -1,0 +1,24 @@
+# Project Rules
+
+## General Guidelines
+
+- All code, comments, documentation, and commit messages must be written in English.
+- Maintain consistency across the entire codebase.
+- Prioritize readability and maintainability over clever solutions.
+- Follow the principle of least surprise - code should behave as other developers would expect.
+- Document architectural decisions and the reasoning behind them.
+
+## Communication
+
+- Use clear and concise English in all project-related communications.
+- Document decisions made during meetings or discussions in a shared location.
+- When asking questions, provide context and what you've already tried.
+- Be respectful and constructive when providing feedback.
+
+## Documentation
+
+- Keep documentation up-to-date with the current state of the project.
+- Document the "why" behind decisions, not just the "what" and "how".
+- Include setup instructions for new developers in the README.
+- Document known limitations and edge cases.
+- Use diagrams where appropriate to explain complex systems or workflows.

@@ -1,0 +1,63 @@
+description: TypeScript code quality guidelines for this project
+
+---
+globs: ["**/*.ts", "**/*.tsx"]
+
+---
+
+rule:
+
+# Coding Guidelines
+
+Follow these guidelines to ensure your TypeScript code is clean, maintainable, and adheres to best practices. Remember, less code is better. Lines of code = Debt.
+
+# Key Mindsets
+
+**1. Simplicity**: Write simple and straightforward code.  
+**2. Readability**: Ensure your code is easy to read and understand.  
+**3. Maintainability**: Write code that is easy to maintain and update.  
+**4. Testability**: Ensure your code is easy to test.  
+**5. Reusability**: Write reusable types, functions, and components.
+
+# Code Guidelines
+
+**1. Utilize Early Returns**  
+Use early returns to avoid deep nesting and improve clarity.
+
+**2. Descriptive Names**  
+Use meaningful and descriptive names. Prefix event handlers with `handle` (e.g., `handleClick`).
+
+**3. Constants Over Functions**  
+Use `const` and inline arrow functions when defining small utilities or reusable values. Prefer declared `type` definitions over inferred `any`.
+
+**4. Correct and DRY Code**  
+Follow DRY (Don't Repeat Yourself) principles. Refactor repeated logic into helpers or utilities.
+
+**5. Functional and Immutable Style**  
+Avoid mutation. Use `map`, `filter`, `reduce`, and spread syntax to maintain immutability where feasible.
+
+**6. Minimal Code Changes**  
+Touch only the code necessary to complete the task. Do not refactor or optimize unrelated code. Avoid modifying comments, structure, or naming unless explicitly required.
+
+# Comments and Documentation
+
+- **Function Descriptions**: Briefly describe the purpose of each function if not self-evident.
+
+# Handling Bugs
+
+- **TODO Comments**: If bugs or suboptimal logic are discovered, annotate with a `TODO:` comment explaining the issue.
+
+# Pseudocode & Planning
+
+When planning or responding with code:
+1. Outline the pseudocode plan (step-by-step)
+2. Confirm it makes sense
+3. Implement the code with minimal changes
+
+# Important: Minimal Code Changes
+
+**Only modify code related to the task.**  
+**Avoid changing existing comments or structure unless instructed.**  
+**No cleanup or reformatting unless requested.**  
+**Every code change introduces potential bugs.**
+

@@ -4,44 +4,55 @@ import * as fs from "fs";
 import * as path from "path";
 import winston from "winston";
 import { OAuth2Client } from "google-auth-library";
-import type { StructuredResumeData } from "./types";
-
-/** Key-value pairs for placeholders. */
-interface ResumeData {
-  [key: string]: string;
-}
-
-interface ServiceAccountConfig {
-  keyFilePath?: string;
-  credentials?: {
-    client_email: string;
-    private_key: string;
-    [key: string]: any;
-  };
-}
+import type { ResumeData, FlattenedResumeData } from "./types";
 
 /**
- * Hard-coded headings used in the template. We remove entire sections if there's no data,
- * and we preserve blank lines both after and before these headings.
+ * Maps resume section headings to their corresponding data fields
+ * Used to determine which sections to include and to preserve spacing
  */
-const KNOWN_HEADINGS = [
-  "EXPERIENCE",
-  "PROJECTS",
-  "EDUCATION",
-  "LANGUAGE SKILLS",
-  "TECHNICAL SKILLS",
-];
+const RESUME_SECTIONS = {
+  EXPERIENCE: {
+    heading: "EXPERIENCE",
+    dataCheck: (data: ResumeData) => data.experience.length > 0,
+  },
+  PROJECTS: {
+    heading: "PROJECTS",
+    dataCheck: (data: ResumeData) => data.projects.length > 0,
+  },
+  EDUCATION: {
+    heading: "EDUCATION",
+    dataCheck: (data: ResumeData) => data.education.length > 0,
+  },
+  LANGUAGE_SKILLS: {
+    heading: "LANGUAGE SKILLS",
+    dataCheck: (data: ResumeData) => data.languageSkills.content.trim() !== "",
+  },
+  TECHNICAL_SKILLS: {
+    heading: "TECHNICAL SKILLS",
+    dataCheck: (data: ResumeData) => data.technicalSkills.content.trim() !== "",
+  },
+};
 
-/** Dynamically determine which headings should appear based on the data. */
-function buildHeadingsListFromData(data: StructuredResumeData): string[] {
-  const headings: string[] = [];
-  if (data.experience.length) headings.push("EXPERIENCE");
-  if (data.projects.length) headings.push("PROJECTS");
-  if (data.education.length) headings.push("EDUCATION");
-  if (data.skills.languages.trim()) headings.push("LANGUAGE SKILLS");
-  if (data.skills.technical.trim()) headings.push("TECHNICAL SKILLS");
-  return headings;
-}
+/**
+ * Get list of all possible headings in the template
+ *
+ * @returns Array of heading strings
+ */
+const getAllHeadings = (): string[] => {
+  return Object.values(RESUME_SECTIONS).map((section) => section.heading);
+};
+
+/**
+ * Dynamically determine which headings should appear based on the data.
+ *
+ * @param data - The structured resume data
+ * @returns Array of heading strings that should be included in the document
+ */
+const buildHeadingsListFromData = (data: ResumeData): string[] => {
+  return Object.values(RESUME_SECTIONS)
+    .filter((section) => section.dataCheck(data))
+    .map((section) => section.heading);
+};
 
 const logger = winston.createLogger({
   level: "debug", // set to 'debug' to capture all logs
@@ -55,10 +66,11 @@ const logger = winston.createLogger({
 
 /**
  * Configure service account authentication
+ *
+ * @returns Promise resolving to an authenticated OAuth2Client
+ * @throws Error if authentication fails
  */
-export async function getAuthClient(
-  config?: ServiceAccountConfig
-): Promise<OAuth2Client> {
+export const getAuthClient = async (): Promise<OAuth2Client> => {
   logger.debug("Initializing Auth Client...");
   if (process.env.NODE_ENV !== "production") {
     // Local environment
@@ -115,16 +127,22 @@ export async function getAuthClient(
     const client = (await auth.getClient()) as OAuth2Client;
     return client;
   }
-}
+};
 
 /**
- * Copy a template doc
+ * Copy a template document to create a new document
+ *
+ * @param auth - Authenticated OAuth2Client
+ * @param templateId - ID of the template document to copy
+ * @param newTitle - Title for the new document
+ * @returns Promise resolving to the ID of the new document
+ * @throws Error if copying fails
  */
-export async function copyTemplate(
+export const copyTemplate = async (
   auth: OAuth2Client,
   templateId: string,
   newTitle: string
-): Promise<string> {
+): Promise<string> => {
   logger.debug(
     `Copying template ${templateId} to new doc titled "${newTitle}"...`
   );
@@ -142,16 +160,21 @@ export async function copyTemplate(
     logger.error("Error copying template:", err);
     throw err;
   }
-}
+};
 
 /**
- * Replace placeholders with structured data
+ * Replace placeholders with structured data in a document
+ *
+ * @param auth - Authenticated OAuth2Client
+ * @param documentId - ID of the document to update
+ * @param data - Structured resume data
+ * @returns Promise that resolves when replacements are complete
  */
-export async function replaceStructuredPlaceholders(
+export const replaceStructuredPlaceholders = async (
   auth: OAuth2Client,
   documentId: string,
-  data: StructuredResumeData
-): Promise<void> {
+  data: ResumeData
+): Promise<void> => {
   logger.debug("Building headings from data...");
   const headingsList = buildHeadingsListFromData(data);
   logger.debug(`Headings that should appear: ${JSON.stringify(headingsList)}`);
@@ -161,24 +184,32 @@ export async function replaceStructuredPlaceholders(
 
   logger.debug("Calling main pipeline replacePlaceholders()...");
   await replacePlaceholders(auth, documentId, flatData, data, headingsList);
-}
+};
 
 /**
- * Pipeline
- * 1) remove entire sections if empty
- * 2) replace placeholders
- * 3) apply the marker-based bold approach
- * 4) remove lines with "##EMPTY_LINE_TO_REMOVE##"
- * 5) remove empty/bar lines
- * 6) fix company bars
+ * Main pipeline for replacing placeholders in a document
+ *
+ * 1) Remove entire sections if empty
+ * 2) Replace placeholders
+ * 3) Apply the marker-based bold approach
+ * 4) Remove lines with "##EMPTY_LINE_TO_REMOVE##"
+ * 5) Remove empty/bar lines
+ * 6) Fix company bars
+ *
+ * @param auth - Authenticated OAuth2Client
+ * @param documentId - ID of the document to update
+ * @param data - Key-value pairs of placeholders and their replacements
+ * @param structuredData - Optional structured resume data for section removal
+ * @param headingsList - Optional list of headings to preserve
+ * @returns Promise that resolves when all replacements are complete
  */
-export async function replacePlaceholders(
+export const replacePlaceholders = async (
   auth: OAuth2Client,
   documentId: string,
-  data: Record<string, string>,
-  structuredData?: StructuredResumeData,
+  data: FlattenedResumeData,
+  structuredData?: ResumeData,
   headingsList?: string[]
-): Promise<void> {
+): Promise<void> => {
   const docs = google.docs({ version: "v1", auth });
   logger.debug("replacePlaceholders: start");
 
@@ -206,11 +237,18 @@ export async function replacePlaceholders(
   await fixCompanyLocationBars(docs, documentId, data);
 
   logger.info("Finished placeholders pipeline!");
-}
+};
 
-/** Flatten the structured data into placeholders */
-export function flattenStructuredData(data: StructuredResumeData): ResumeData {
-  const flat: ResumeData = {};
+/**
+ * Flatten the structured data into key-value placeholder pairs
+ *
+ * @param data - Structured resume data
+ * @returns Flattened key-value pairs for placeholder replacement
+ */
+export const flattenStructuredData = (
+  data: ResumeData
+): FlattenedResumeData => {
+  const flat: FlattenedResumeData = {};
 
   flat["name"] = data.basicInfo.name;
   flat["phone"] = data.basicInfo.phone;
@@ -271,42 +309,44 @@ export function flattenStructuredData(data: StructuredResumeData): ResumeData {
     flat[`education_date_${i}`] = "";
   }
 
-  flat["language_skills"] = data.skills.languages;
-  flat["technical_skills"] = data.skills.technical;
+  flat["language_skills"] = data.languageSkills.content;
+  flat["technical_skills"] = data.technicalSkills.content;
 
   logger.debug("Flattened data: " + JSON.stringify(flat, null, 2));
   return flat;
-}
+};
 
-/** 1) Remove entire sections if data is empty. */
-async function removeEmptySections(
+/**
+ * Remove entire sections if data is empty
+ *
+ * @param docs - Google Docs API client
+ * @param documentId - ID of the document to update
+ * @param data - Structured resume data
+ */
+const removeEmptySections = async (
   docs: docs_v1.Docs,
   documentId: string,
-  data: StructuredResumeData
-) {
-  if (!data.experience.length) {
-    await removeSection(docs, documentId, "EXPERIENCE");
+  data: ResumeData
+) => {
+  for (const section of Object.values(RESUME_SECTIONS)) {
+    if (!section.dataCheck(data)) {
+      await removeSection(docs, documentId, section.heading);
+    }
   }
-  if (!data.projects.length) {
-    await removeSection(docs, documentId, "PROJECTS");
-  }
-  if (!data.education.length) {
-    await removeSection(docs, documentId, "EDUCATION");
-  }
-  if (!data.skills.languages.trim()) {
-    await removeSection(docs, documentId, "LANGUAGE SKILLS");
-  }
-  if (!data.skills.technical.trim()) {
-    await removeSection(docs, documentId, "TECHNICAL SKILLS");
-  }
-}
+};
 
-/** Remove heading + lines until next heading or doc end. */
-async function removeSection(
+/**
+ * Remove a section from the document by heading name
+ *
+ * @param docs - Google Docs API client
+ * @param documentId - ID of the document to update
+ * @param heading - Heading text of the section to remove
+ */
+const removeSection = async (
   docs: docs_v1.Docs,
   documentId: string,
   heading: string
-) {
+) => {
   logger.debug(`removeSection(${heading})...`);
   const docRes = await docs.documents.get({ documentId });
   const doc = docRes.data;
@@ -334,7 +374,7 @@ async function removeSection(
   for (let j = startIdx + 1; j < doc.body.content.length; j++) {
     const lineText = getParagraphText(doc.body.content[j]).trim().toUpperCase();
     if (
-      KNOWN_HEADINGS.includes(lineText) &&
+      getAllHeadings().includes(lineText) &&
       lineText !== heading.toUpperCase()
     ) {
       endIdx = j - 1;
@@ -373,14 +413,21 @@ async function removeSection(
   } catch (err) {
     logger.warn(`Failed removing section ${heading}: ${err}`);
   }
-}
+};
 
-/** 2) Replace placeholders. Empty bullet => "##EMPTY_LINE_TO_REMOVE##" */
-async function doReplacePlaceholders(
+/**
+ * Replace placeholders with their values
+ * Empty bullet points are marked with "##EMPTY_LINE_TO_REMOVE##" for later removal
+ *
+ * @param docs - Google Docs API client
+ * @param documentId - ID of the document to update
+ * @param data - Key-value pairs of placeholders and their replacements
+ */
+const doReplacePlaceholders = async (
   docs: docs_v1.Docs,
   documentId: string,
   data: Record<string, string>
-) {
+) => {
   logger.debug("doReplacePlaceholders()...");
   const docRes = await docs.documents.get({ documentId });
   const doc = docRes.data;
@@ -451,12 +498,16 @@ async function doReplacePlaceholders(
     await wait(300);
   }
   logger.debug("doReplacePlaceholders() done.");
-}
+};
 
 /**
- * 3) applyBoldMarkers => find `@@BOLD-xyz@@some text@@BOLD-xyz-END@@`, remove marker, bold only `some text`.
+ * Apply bold formatting to text marked with special markers
+ * Finds patterns like `@@BOLD-xyz@@some text@@BOLD-xyz-END@@`, removes markers, and bolds "some text"
+ *
+ * @param docs - Google Docs API client
+ * @param documentId - ID of the document to update
  */
-async function applyBoldMarkers(docs: docs_v1.Docs, documentId: string) {
+const applyBoldMarkers = async (docs: docs_v1.Docs, documentId: string) => {
   logger.debug("applyBoldMarkers: scanning doc for marker => bold text...");
   // repeated passes:
   let doc = (await docs.documents.get({ documentId })).data;
@@ -567,10 +618,15 @@ async function applyBoldMarkers(docs: docs_v1.Docs, documentId: string) {
   logger.debug(
     "applyBoldMarkers done. No more marker matches or pass limit reached."
   );
-}
+};
 
-/** 4) Remove lines containing "##EMPTY_LINE_TO_REMOVE##" with replaceAllText. */
-async function removeEmptyMarkers(docs: docs_v1.Docs, documentId: string) {
+/**
+ * Remove lines containing "##EMPTY_LINE_TO_REMOVE##" marker
+ *
+ * @param docs - Google Docs API client
+ * @param documentId - ID of the document to update
+ */
+const removeEmptyMarkers = async (docs: docs_v1.Docs, documentId: string) => {
   logger.debug("removeEmptyMarkers()...");
   try {
     await docs.documents.batchUpdate({
@@ -594,17 +650,22 @@ async function removeEmptyMarkers(docs: docs_v1.Docs, documentId: string) {
   } catch (err) {
     logger.warn("Failed removing '##EMPTY_LINE_TO_REMOVE##': " + err);
   }
-}
+};
 
 /**
- * 5) Remove lines that are empty or only '|', one at a time in descending order.
- * We skip removing if the line is right after a heading or right before a heading (so you can keep a blank line after or before headings).
+ * Remove lines that are empty or only contain '|' characters
+ * Processes one line at a time in descending order
+ * Preserves blank lines after or before headings
+ *
+ * @param docs - Google Docs API client
+ * @param documentId - ID of the document to update
+ * @param headingsList - List of headings to check for adjacency
  */
-async function removeEmptyBarLinesOneByOne(
+const removeEmptyBarLinesOneByOne = async (
   docs: docs_v1.Docs,
   documentId: string,
   headingsList: string[]
-) {
+) => {
   logger.debug("removeEmptyBarLinesOneByOne()...");
   let docResponse = await docs.documents.get({ documentId });
   let doc = docResponse.data;
@@ -705,14 +766,21 @@ async function removeEmptyBarLinesOneByOne(
     }
   }
   logger.debug("removeEmptyBarLinesOneByOne() done.");
-}
+};
 
-/** Check if a paragraph is immediately AFTER a heading from headingsList. */
-function isImmediatelyAfterHeading(
+/**
+ * Check if a paragraph is immediately after a heading
+ *
+ * @param doc - Document object
+ * @param paragraph - Paragraph to check
+ * @param headingsList - List of headings to check against
+ * @returns True if paragraph is immediately after a heading
+ */
+const isImmediatelyAfterHeading = (
   doc: docs_v1.Schema$Document,
   paragraph: docs_v1.Schema$StructuralElement,
   headingsList: string[]
-): boolean {
+): boolean => {
   if (!doc.body?.content) return false;
   const idx = doc.body.content.findIndex(
     (x) => x.startIndex === paragraph.startIndex
@@ -722,14 +790,21 @@ function isImmediatelyAfterHeading(
   const prevItem = doc.body.content[idx - 1];
   const prevText = getParagraphText(prevItem).trim().toUpperCase();
   return headingsList.some((h) => h.toUpperCase() === prevText);
-}
+};
 
-/** Check if a paragraph is immediately BEFORE a heading from headingsList. */
-function isImmediatelyBeforeHeading(
+/**
+ * Check if a paragraph is immediately before a heading
+ *
+ * @param doc - Document object
+ * @param paragraph - Paragraph to check
+ * @param headingsList - List of headings to check against
+ * @returns True if paragraph is immediately before a heading
+ */
+const isImmediatelyBeforeHeading = (
   doc: docs_v1.Schema$Document,
   paragraph: docs_v1.Schema$StructuralElement,
   headingsList: string[]
-): boolean {
+): boolean => {
   if (!doc.body?.content) return false;
   const idx = doc.body.content.findIndex(
     (x) => x.startIndex === paragraph.startIndex
@@ -740,14 +815,21 @@ function isImmediatelyBeforeHeading(
   if (!nextItem) return false;
   const nextText = getParagraphText(nextItem).trim().toUpperCase();
   return headingsList.some((h) => h.toUpperCase() === nextText);
-}
+};
 
-/** 6) Fix "Company City" => "Company | City", etc. */
-async function fixCompanyLocationBars(
+/**
+ * Fix formatting of company and location pairs
+ * Converts "Company City" to "Company | City" format
+ *
+ * @param docs - Google Docs API client
+ * @param documentId - ID of the document to update
+ * @param data - Key-value pairs of placeholders and their replacements
+ */
+const fixCompanyLocationBars = async (
   docs: docs_v1.Docs,
   documentId: string,
   data: Record<string, string>
-) {
+) => {
   logger.debug("fixCompanyLocationBars()...");
   const requests: docs_v1.Schema$Request[] = [];
 
@@ -784,10 +866,15 @@ async function fixCompanyLocationBars(
     });
   }
   logger.debug("fixCompanyLocationBars() done.");
-}
+};
 
-/** Return text from a paragraph */
-function getParagraphText(item: docs_v1.Schema$StructuralElement): string {
+/**
+ * Extract text content from a paragraph element
+ *
+ * @param item - Structural element containing a paragraph
+ * @returns Text content of the paragraph
+ */
+const getParagraphText = (item: docs_v1.Schema$StructuralElement): string => {
   let text = "";
   if (item?.paragraph?.elements) {
     for (const el of item.paragraph.elements) {
@@ -797,14 +884,21 @@ function getParagraphText(item: docs_v1.Schema$StructuralElement): string {
     }
   }
   return text;
-}
+};
 
-/** Find best paragraph match by startIndex */
-function findParagraphByRange(
+/**
+ * Find the paragraph that best matches the given range
+ *
+ * @param doc - Document object
+ * @param startIndex - Target start index
+ * @param endIndex - Target end index
+ * @returns The best matching paragraph or null if none found
+ */
+const findParagraphByRange = (
   doc: docs_v1.Schema$Document,
   startIndex: number,
   endIndex: number
-): docs_v1.Schema$StructuralElement | null {
+): docs_v1.Schema$StructuralElement | null => {
   if (!doc.body?.content) return null;
   let best: docs_v1.Schema$StructuralElement | null = null;
   let bestDelta = Infinity;
@@ -818,20 +912,33 @@ function findParagraphByRange(
     }
   }
   return best;
-}
+};
 
-/** Sleep helper */
-function wait(ms: number) {
+/**
+ * Promise-based delay function
+ *
+ * @param ms - Milliseconds to wait
+ * @returns Promise that resolves after the specified delay
+ */
+const wait = (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
+};
 
-/** Share doc with a user */
-export async function shareDocument(
+/**
+ * Share a document with a user
+ *
+ * @param auth - Authenticated OAuth2Client
+ * @param documentId - ID of the document to share
+ * @param email - Email address of the user to share with
+ * @param role - Permission role to grant (reader, writer, or commenter)
+ * @throws Error if sharing fails
+ */
+export const shareDocument = async (
   auth: OAuth2Client,
   documentId: string,
   email: string,
   role: "reader" | "writer" | "commenter" = "reader"
-) {
+) => {
   logger.debug(`Sharing doc ${documentId} with ${email}, role=${role}...`);
   try {
     const drive = google.drive({ version: "v3", auth });
@@ -844,9 +951,14 @@ export async function shareDocument(
     logger.error(`Error sharing document with ${email}:`, err);
     throw err;
   }
-}
+};
 
-/** Return doc URL */
-export function getDocumentUrl(documentId: string): string {
+/**
+ * Get the URL for a Google Doc
+ *
+ * @param documentId - ID of the document
+ * @returns URL to access the document
+ */
+export const getDocumentUrl = (documentId: string): string => {
   return `https://docs.google.com/document/d/${documentId}/edit`;
-}
+};

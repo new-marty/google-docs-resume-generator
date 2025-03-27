@@ -1,0 +1,80 @@
+
+description: Git and GitHub best practices for this project
+
+---
+globs: ["**"]
+
+---
+
+rule:
+
+# Git and GitHub Guidelines
+
+These rules help ensure consistency, traceability, and minimal disruption in collaborative workflows.
+
+## Commit Messages
+
+- **Use descriptive prefixes**:
+  - `hotfix:` critical production fixes
+  - `fix:` bug fixes
+  - `feat:` new features
+  - `add:` minor additions
+  - `chore:` maintenance tasks
+  - `update:` improvements or refactoring
+  - `remove:` removing code or functionality
+  - `docs:` documentation updates
+  - `test:` adding or modifying tests
+
+- **Use imperative mood**: e.g., `fix: correct login logic`, not "fixed" or "fixes".
+- **Be concise and descriptive**: Explain what and why, not how.
+- **Group related changes**: One commit = one logical change.
+- **Avoid WIP commits**: Use local history or squash before pushing.
+
+**Good Examples:**
+- `fix: correct logic for user session timeout`
+- `feat: add file upload support to profile form`
+- `docs: update README with setup instructions`
+
+---
+
+## Branching
+
+- **Use feature branches**: Never commit directly to `main` or `develop`.
+- **Branch naming convention**: Use Linear-style naming with issue IDs from [Linear](https://linear.app), e.g., `abc-123-add-login-form`.
+- No restrictions on the rest of the branch name formatting.
+
+---
+
+## Pull Requests
+
+- **Small and focused**: Only include changes related to one task or fix.
+- **Minimal changes**: Do not reformat or optimize unrelated code.
+- **Reference issues**: Link related issues with `Closes #123` or `Fixes #456`.
+- **Self-review before submitting**: Ensure the PR is clean, clear, and passes CI.
+- **Use draft PRs**: Mark as draft if still in progress.
+
+---
+
+## Merge Strategy
+
+- **Squash and merge**: Preferred method to keep history clean.
+- **Rebase before merging**: Rebase against `main` to avoid merge commits.
+- **Never force push to shared branches**
+
+---
+
+## Code Review Etiquette
+
+- **Be respectful and constructive**
+- **Focus on correctness and clarity, not personal preferences**
+- **Request changes only when necessary**
+- **Approve promptly when satisfied**
+
+---
+
+## Important: Minimal Diff Principle
+
+**Do not include unrelated changes in a PR**.  
+**Do not change formatting or naming unless it directly relates to the issue**.  
+**Each PR should solve one problem and introduce the smallest possible diff.**
+

@@ -5,8 +5,15 @@ import {
   shareDocument,
   getDocumentUrl,
 } from "./googleDocsResumeGenerator.ts";
-import { sampleResumeData } from "./sampleResumeData.ts";
+import {
+  sampleResumeData,
+  sampleResumeData_minimal,
+  sampleResumeData_experienceOnly,
+  sampleResumeData_noProjects,
+  sampleResumeData_full,
+} from "./testData/sampleResumeData.ts";
 import winston from "winston";
+import type { ResumeData } from "./types.ts";
 
 // Setup logger
 const logger = winston.createLogger({
@@ -22,7 +29,7 @@ const logger = winston.createLogger({
 /**
  * Run resume generator test
  */
-async function testResumeGenerator() {
+async function testResumeGenerator(data: ResumeData) {
   try {
     logger.info("Starting resume generator test");
 
@@ -38,7 +45,7 @@ async function testResumeGenerator() {
 
     // Generate new document title
     const newTitle = `Resume - ${
-      sampleResumeData.basicInfo.name
+      data.basicInfo.name
     } - ${new Date().toISOString()}`;
     logger.info(`Creating new document with title: ${newTitle}`);
 
@@ -48,7 +55,7 @@ async function testResumeGenerator() {
 
     // Replace placeholders using structured data
     logger.info("Replacing placeholders with structured sample data");
-    await replaceStructuredPlaceholders(auth, newDocumentId, sampleResumeData);
+    await replaceStructuredPlaceholders(auth, newDocumentId, data);
     logger.info("Placeholders replaced successfully");
 
     // Share document with user
@@ -76,11 +83,48 @@ async function testResumeGenerator() {
   }
 }
 
-// Execute test
-testResumeGenerator().then((result) => {
+// // Execute test
+// sampleResumeData
+testResumeGenerator(sampleResumeData).then((result) => {
   if (result.success) {
     console.log("Test completed successfully");
   } else {
     console.error("Test failed");
   }
 });
+
+// // sampleResumeData_minimal
+// testResumeGenerator(sampleResumeData_minimal).then((result) => {
+//   if (result.success) {
+//     console.log("Test completed successfully");
+//   } else {
+//     console.error("Test failed");
+//   }
+// });
+
+// // sampleResumeData_experienceOnly
+// testResumeGenerator(sampleResumeData_experienceOnly).then((result) => {
+//   if (result.success) {
+//     console.log("Test completed successfully");
+//   } else {
+//     console.error("Test failed");
+//   }
+// });
+
+// // sampleResumeData_noProjects
+// testResumeGenerator(sampleResumeData_noProjects).then((result) => {
+//   if (result.success) {
+//     console.log("Test completed successfully");
+//   } else {
+//     console.error("Test failed");
+//   }
+// });
+
+// // sampleResumeData_full
+// testResumeGenerator(sampleResumeData_full).then((result) => {
+//   if (result.success) {
+//     console.log("Test completed successfully");
+//   } else {
+//     console.error("Test failed");
+//   }
+// });

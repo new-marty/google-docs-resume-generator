@@ -1,3 +1,6 @@
+/**
+ * Basic personal information
+ */
 interface BasicInfo {
   name: string;
   phone: string;
@@ -6,7 +9,9 @@ interface BasicInfo {
   link: string;
 }
 
-// Experience entry
+/**
+ * Work experience information
+ */
 interface ExperienceEntry {
   company: string;
   companyLocation: string;
@@ -15,30 +20,51 @@ interface ExperienceEntry {
   points: string[];
 }
 
-// Project entry
+/**
+ * Project information
+ */
 interface ProjectEntry {
   name: string;
   points: string[];
 }
 
-// Education entry
+/**
+ * Education information
+ */
 interface EducationEntry {
   institution: string;
   degree: string;
   date: string;
 }
 
-// Skills
-interface Skills {
-  languages: string;
-  technical: string;
+/**
+ * Language skills information
+ */
+interface LanguageSkills {
+  content: string;
 }
 
-// Complete resume data structure
-export interface StructuredResumeData {
+/**
+ * Technical skills information
+ */
+interface TechnicalSkills {
+  content: string;
+}
+
+/**
+ * Structured resume data
+ */
+export interface ResumeData {
   basicInfo: BasicInfo;
   experience: ExperienceEntry[];
   projects: ProjectEntry[];
   education: EducationEntry[];
-  skills: Skills;
+  languageSkills: LanguageSkills;
+  technicalSkills: TechnicalSkills;
 }
+
+/**
+ * Flattened data for template replacement
+ * Generated from ResumeData
+ */
+export type FlattenedResumeData = Record<string, string>;
