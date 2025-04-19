@@ -1,0 +1,89 @@
+{
+  "conventional": true,
+  "emoji": true,
+  "language": "en",
+  "model": "gpt-4",
+  "debug": false,
+  "types": [
+    {
+      "type": "feat",
+      "emoji": "✨"
+    },
+    {
+      "type": "fix",
+      "emoji": "🐛"
+    },
+    {
+      "type": "docs",
+      "emoji": "📝"
+    },
+    {
+      "type": "style",
+      "emoji": "💄"
+    },
+    {
+      "type": "refactor",
+      "emoji": "♻️"
+    },
+    {
+      "type": "perf",
+      "emoji": "⚡️"
+    },
+    {
+      "type": "test",
+      "emoji": "✅"
+    },
+    {
+      "type": "build",
+      "emoji": "📦️"
+    },
+    {
+      "type": "ci",
+      "emoji": "🎡"
+    },
+    {
+      "type": "chore",
+      "emoji": "🔨"
+    },
+    {
+      "type": "revert",
+      "emoji": "⏪️"
+    },
+    {
+      "type": "wip",
+      "emoji": "🚧"
+    },
+    {
+      "type": "hotfix",
+      "emoji": "🚑️"
+    },
+    {
+      "type": "security",
+      "emoji": "🔒️"
+    },
+    {
+      "type": "release",
+      "emoji": "🔖"
+    },
+    {
+      "type": "typo",
+      "emoji": "✏️"
+    },
+    {
+      "type": "merge",
+      "emoji": "🔀"
+    },
+    {
+      "type": "breaking",
+      "emoji": "💥"
+    },
+    {
+      "type": "easter",
+      "emoji": "🥚"
+    },
+    {
+      "type": "patch",
+      "emoji": "🩹"
+    }
+  ]
+}

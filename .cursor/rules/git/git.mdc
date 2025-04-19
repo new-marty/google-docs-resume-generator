@@ -1,4 +1,3 @@
-
 description: Git and GitHub best practices for this project
 
 ---
@@ -14,26 +13,40 @@ These rules help ensure consistency, traceability, and minimal disruption in col
 
 ## Commit Messages
 
-- **Use descriptive prefixes**:
-  - `hotfix:` critical production fixes
-  - `fix:` bug fixes
-  - `feat:` new features
-  - `add:` minor additions
-  - `chore:` maintenance tasks
-  - `update:` improvements or refactoring
-  - `remove:` removing code or functionality
-  - `docs:` documentation updates
-  - `test:` adding or modifying tests
+This project follows the [Conventional Commits v1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) specification with [cz-git](https://cz-git.qbb.sh/) emoji-style prefixes.
+
+### Conventional Commit Structure
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+### Supported Types
+
+See `root/.opencommitrc` for supported types.
+
+### Commit Guidelines
 
 - **Use imperative mood**: e.g., `fix: correct login logic`, not "fixed" or "fixes".
 - **Be concise and descriptive**: Explain what and why, not how.
 - **Group related changes**: One commit = one logical change.
 - **Avoid WIP commits**: Use local history or squash before pushing.
+- **Use `!` or `BREAKING CHANGE:` to indicate breaking changes**
 
-**Good Examples:**
-- `fix: correct logic for user session timeout`
-- `feat: add file upload support to profile form`
-- `docs: update README with setup instructions`
+### Examples
+
+- `🐛 fix: correct logic for user session timeout`
+- `✨ feat: add file upload support to profile form`
+- `📝 docs: update README with setup instructions`
+- `feat(api)!: change auth method to OAuth2`
+- `chore!: drop support for Node 14\n\nBREAKING CHANGE: requires Node >=16`
+- `🚧 wip: implement new dashboard layout`
+
+**Optional:** If available, you may use [opencommit](https://github.com/di-sukharev/opencommit) oco command to assist in generating Conventional Commit messages.
 
 ---
 
@@ -63,18 +76,19 @@ These rules help ensure consistency, traceability, and minimal disruption in col
 
 ---
 
-## Code Review Etiquette
-
-- **Be respectful and constructive**
-- **Focus on correctness and clarity, not personal preferences**
-- **Request changes only when necessary**
-- **Approve promptly when satisfied**
-
----
-
 ## Important: Minimal Diff Principle
 
 **Do not include unrelated changes in a PR**.  
 **Do not change formatting or naming unless it directly relates to the issue**.  
 **Each PR should solve one problem and introduce the smallest possible diff.**
+
+# Git Commit Message Guidelines
+
+## Supported Commit Types
+
+For commit types and their corresponding emojis, please refer to the `.opencommitrc` file at the root of the repository. This file defines all supported commit types and their associated emojis.
+
+The `.opencommitrc` file is the source of truth for commit types in this project. Before creating a commit message, check this file for the current list of supported types.
+
+## Commit Message Format
 
